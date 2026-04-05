@@ -1,275 +1,183 @@
-"""
-MARSHALL PRO v1.0
-SS & SR Engineering Tools
-Sanket Shrivastav & Sachin Ramesh
-© 2026 SS & SR Engineering Tools · All Rights Reserved
-"""
-
-import webbrowser
-import threading
-import json
+import os
+import math
 import base64
 import io
-import random
-import string
-from datetime import datetime
-
+import threading
+import webbrowser
+from flask import Flask, render_template, request, jsonify
 import numpy as np
 from scipy.interpolate import CubicSpline
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
 
-# ── Correction Factor Table ────────────────────────────
-CF_TABLE = [
-    (457, 470, 1.13), (471, 482, 1.14), (483, 495, 1.09),
-    (496, 508, 1.04), (509, 522, 1.00), (523, 535, 0.96),
-    (536, 546, 0.93), (547, 559, 0.89), (560, 573, 0.83),
-]
-
-def get_cf(vol):
-    for lo, hi, cf in CF_TABLE:
-        if lo <= vol <= hi:
-            return cf
+def get_correction_factor(volume):
+    if volume < 457: return 1.13
+    if 457 <= volume <= 470: return 1.13
+    if 471 <= volume <= 482: return 1.14
+    if 483 <= volume <= 495: return 1.09
+    if 496 <= volume <= 508: return 1.04
+    if 509 <= volume <= 522: return 1.00
+    if 523 <= volume <= 535: return 0.96
+    if 536 <= volume <= 546: return 0.93
+    if 547 <= volume <= 559: return 0.89
+    if 560 <= volume <= 573: return 0.83
+    if volume > 573: return 0.83
     return 1.00
 
-# ── Generate report number ─────────────────────────────
-def gen_report_no():
-    suffix = ''.join(random.choices(string.digits, k=4))
-    return f"MSSR-2026-{suffix}"
-
-# ── Graph generator ────────────────────────────────────
-NAVY   = '#0a1628'
-GOLD   = '#c9a84c'
-WHITE  = '#ffffff'
-RED    = '#e74c3c'
-LGRAY  = '#6b7fa3'
-
-def make_graph(bp, y_data, y_label, title, color, ref_y=None, obc=None):
-    fig, ax = plt.subplots(figsize=(5, 3.5))
-    fig.patch.set_facecolor(NAVY)
-    ax.set_facecolor('#111f35')
-
-    # Cubic spline
-    cs = CubicSpline(bp, y_data)
-    x_fine = np.linspace(bp[0], bp[-1], 300)
-    y_fine = cs(x_fine)
-
-    # Plot curve
-    ax.plot(x_fine, y_fine, color=color, linewidth=2.5, zorder=3)
-
-    # Plot data points
-    ax.scatter(bp, y_data, color=GOLD, s=60, zorder=5, linewidths=1.5)
-
-    # OBC vertical line
-    if obc is not None:
-        ax.axvline(x=obc, color=GOLD, linestyle='--', linewidth=1.5,
-                   alpha=0.8, zorder=4, label=f'OBC={obc:.2f}%')
-
-    # Reference horizontal line (VIM=4)
-    if ref_y is not None:
-        ax.axhline(y=ref_y, color=RED, linestyle=':', linewidth=1.5,
-                   alpha=0.8, zorder=4, label=f'={ref_y}%')
-
-    # Styling
-    ax.set_xlabel('Binder Content (%)', color=LGRAY, fontsize=8)
-    ax.set_ylabel(y_label, color=LGRAY, fontsize=8)
-    ax.set_title(title, color=WHITE, fontsize=9, fontweight='bold', pad=8)
-    ax.tick_params(colors=LGRAY, labelsize=7)
-    ax.spines['bottom'].set_color('#1e3a5f')
-    ax.spines['left'].set_color('#1e3a5f')
-    ax.spines['top'].set_color('#1e3a5f')
-    ax.spines['right'].set_color('#1e3a5f')
-    ax.grid(color='#1e3a5f', linewidth=0.5, alpha=0.5)
-
-    y_pad = (max(y_fine) - min(y_fine)) * 0.15
-    ax.set_ylim(min(min(y_fine), min(y_data)) - y_pad,
-                max(max(y_fine), max(y_data)) + y_pad)
-    ax.set_xlim(bp[0] - 0.2, bp[-1] + 0.2)
-
-    plt.tight_layout()
-
+def generate_graph(x, y, x_label, y_label, title, x_obc=None, y_line=None):
+    fig, ax = plt.subplots(figsize=(6, 4))
+    
+    # Sort for interpolation
+    sort_idx = np.argsort(x)
+    x_s = np.array(x)[sort_idx]
+    y_s = np.array(y)[sort_idx]
+    
+    # Polynomial Curve Fitting (Degree 2 for standard Marshall smooth curves)
+    p = np.polyfit(x_s, y_s, 2)
+    poly_curve = np.poly1d(p)
+    x_dense = np.linspace(min(x_s), max(x_s), 1000)
+    y_dense = poly_curve(x_dense)
+    
+    ax.plot(x_dense, y_dense, color='#0f172a', linewidth=2, label='Best-Fit Curve')
+    ax.plot(x_s, y_s, 'ro', label='Data Points')
+    
+    if x_obc is not None:
+        ax.axvline(x=x_obc, color='#2563eb', linestyle='--', linewidth=2, label=f'OBC = {x_obc:.2f}%')
+    
+    if y_line is not None:
+        ax.axhline(y=y_line, color='orange', linestyle='--', linewidth=2, label=f'{y_label} = {y_line}')
+        
+    ax.set_xlabel(x_label)
+    ax.set_ylabel(y_label)
+    ax.set_title(title)
+    ax.grid(True, linestyle=':', alpha=0.6)
+    ax.legend(loc='best')
+    
     buf = io.BytesIO()
-    plt.savefig(buf, format='png', dpi=130,
-                facecolor=NAVY, bbox_inches='tight')
+    plt.tight_layout()
+    plt.savefig(buf, format='png', dpi=150)
     plt.close(fig)
     buf.seek(0)
     return base64.b64encode(buf.read()).decode('utf-8')
 
-
-# ── Main route ─────────────────────────────────────────
 @app.route('/')
 def index():
     return render_template('index.html')
 
-
-# ── Calculate route ────────────────────────────────────
 @app.route('/calculate', methods=['POST'])
 def calculate():
-    data = request.get_json()
-
-    name1  = data.get('name1', '').strip()
-    name2  = data.get('name2', '').strip()
-    gsb    = float(data['gsb'])
-    gsa    = float(data['gsa'])
-    prc    = float(data['prc'])
-    samples = data['samples']
-
-    # Sort by bitumen %
-    samples = sorted(samples, key=lambda s: s['bp'])
-
-    bp  = np.array([s['bp']  for s in samples], dtype=float)
-    wa  = np.array([s['wa']  for s in samples], dtype=float)
-    ww  = np.array([s['ww']  for s in samples], dtype=float)
-    pd  = np.array([s['pd']  for s in samples], dtype=float)
-    df  = np.array([s['df']  for s in samples], dtype=float)
-    tk  = np.array([s['tk']  for s in samples], dtype=float)
-    n   = len(bp)
-
-    # ── Calculations ──────────────────────────────────
-    CDM  = wa / (wa - ww)
-    vol  = (np.pi / 4) * (101.6 / 10)**2 * (tk / 10)
-    CF   = np.array([get_cf(v) for v in vol])
-    STAB = pd * prc * CF
-    FLOW = df * 0.25
-    Vb   = (bp * CDM) / gsb
-    Va   = ((100 - bp) * CDM) / gsa
-    VMA  = 100 - Va
-    VIM  = 100 - Vb - Va
-    VFB  = np.where(VMA != 0, (100 * Vb) / VMA, 0)
-
-    # ── Cubic spline ──────────────────────────────────
-    x_fine = np.linspace(bp[0], bp[-1], 500)
-
-    cs_cdm  = CubicSpline(bp, CDM)
-    cs_stab = CubicSpline(bp, STAB)
-    cs_vim  = CubicSpline(bp, VIM)
-    cs_vfb  = CubicSpline(bp, VFB)
-    cs_flow = CubicSpline(bp, FLOW)
-
-    cdm_f  = cs_cdm(x_fine)
-    stab_f = cs_stab(x_fine)
-    vim_f  = cs_vim(x_fine)
-
-    # ── OBC ───────────────────────────────────────────
-    obc_cdm  = float(x_fine[np.argmax(cdm_f)])
-    obc_stab = float(x_fine[np.argmax(stab_f)])
-
-    # VIM = 4% crossing
-    vim_diff = np.abs(vim_f - 4.0)
-    obc_vim  = float(x_fine[np.argmin(vim_diff)])
-
-    obc      = (obc_cdm + obc_stab + obc_vim) / 3.0
-    max_cdm  = float(cs_cdm(obc_cdm))
-    max_stab = float(cs_stab(obc_stab))
-    obc_vim_val  = float(cs_vim(obc))
-    obc_vfb_val  = float(cs_vfb(obc))
-    obc_flow_val = float(cs_flow(obc))
-    flow_units   = obc_flow_val / 0.25
-
-    # ── Spec check ────────────────────────────────────
-    specs = [
-        {'name': 'Marshall Stability', 'req': '≥ 340 kg',
-         'val': f'{max_stab:.2f} kg', 'pass': max_stab >= 340},
-        {'name': 'Flow Value', 'req': '8 – 17 (0.25mm units)',
-         'val': f'{flow_units:.1f} units', 'pass': 8 <= flow_units <= 17},
-        {'name': 'Air Voids (VIM)', 'req': '3 – 5%',
-         'val': f'{obc_vim_val:.2f}%', 'pass': 3 <= obc_vim_val <= 5},
-        {'name': 'Voids Filled (VFB)', 'req': '75 – 85%',
-         'val': f'{obc_vfb_val:.2f}%', 'pass': 75 <= obc_vfb_val <= 85},
-    ]
-
-    # ── Generate graphs ───────────────────────────────
-    graph_colors = ['#4a9eff', '#4affb4', '#ff6b6b', '#a78bfa', '#fbbf24']
-    titles = [
-        'Density vs Binder Content',
-        'Stability vs Binder Content',
-        'Voids in Mix (VIM) vs Binder Content',
-        'VFB vs Binder Content',
-        'Flow vs Binder Content',
-    ]
-    ylabels = ['CDM (g/cm³)', 'Stability (kg)', 'VIM (%)', 'VFB (%)', 'Flow (mm)']
-    y_datas = [CDM, STAB, VIM, VFB, FLOW]
-    ref_ys  = [None, None, 4, None, None]
-
-    graphs = []
-    for i in range(5):
-        img = make_graph(
-            bp, y_datas[i], ylabels[i], titles[i],
-            graph_colors[i], ref_ys[i], obc
-        )
-        graphs.append(img)
-
-    # ── Computed rows ─────────────────────────────────
-    computed = []
-    for i in range(n):
-        computed.append({
-            'sr':   i + 1,
-            'bp':   round(float(bp[i]), 2),
-            'cdm':  round(float(CDM[i]), 3),
-            'vb':   round(float(Vb[i]), 2),
-            'va':   round(float(Va[i]), 2),
-            'vma':  round(float(VMA[i]), 2),
-            'vim':  round(float(VIM[i]), 2),
-            'vfb':  round(float(VFB[i]), 2),
-            'stab': round(float(STAB[i]), 2),
-            'flow': round(float(FLOW[i]), 2),
-            'cf':   round(float(CF[i]), 2),
+    data = request.json
+    gs_bitumen = float(data.get('gs_bitumen', 1.01))
+    gs_aggregates = float(data.get('gs_aggregates', 2.65))
+    ring_constant = float(data.get('ring_constant', 5.0))
+    samples = data.get('samples', [])
+    
+    if len(samples) < 4:
+        return jsonify({'error': 'Minimum 4 samples required'}), 400
+        
+    results = []
+    bitumen_contents = []
+    cdm_values = []
+    stability_values = []
+    vim_values = []
+    vfb_values = []
+    flow_values = []
+    
+    for s in samples:
+        pct_b = float(s['bitumen'])
+        w_air = float(s['wt_air'])
+        w_water = float(s['wt_water'])
+        proving_divs = float(s['proving_divs'])
+        flow_units = float(s['flow_units'])
+        thickness = float(s['thickness'])
+        
+        cdm = w_air / (w_air - w_water)
+        vol = (math.pi / 4) * (101.6 / 10)**2 * (thickness / 10)
+        cf = get_correction_factor(vol)
+        
+        stability = proving_divs * ring_constant * cf
+        flow_mm = flow_units * 0.25
+        
+        vb = (pct_b * cdm) / gs_bitumen
+        va = ((100 - pct_b) * cdm) / gs_aggregates
+        vma = 100 - va
+        vim = 100 - vb - va
+        vfb = (100 * vb) / vma
+        
+        results.append({
+            'bitumen': pct_b,
+            'cdm': round(cdm, 3),
+            'vol': round(vol, 2),
+            'vb': round(vb, 2),
+            'va': round(va, 2),
+            'vma': round(vma, 2),
+            'vim': round(vim, 2),
+            'vfb': round(vfb, 2),
+            'stability': round(stability, 2),
+            'flow': round(flow_mm, 2)
         })
-
-    obs = []
-    for i in range(n):
-        obs.append({
-            'sr':  i + 1,
-            'bp':  round(float(bp[i]), 2),
-            'wa':  round(float(wa[i]), 2),
-            'ww':  round(float(ww[i]), 2),
-            'pd':  round(float(pd[i]), 2),
-            'df':  round(float(df[i]), 2),
-            'tk':  round(float(tk[i]), 2),
-        })
-
+        
+        bitumen_contents.append(pct_b)
+        cdm_values.append(cdm)
+        stability_values.append(stability)
+        vim_values.append(vim)
+        vfb_values.append(vfb)
+        flow_values.append(flow_mm)
+        
+    # Sort arrays for processing
+    bitumen_contents = np.array(bitumen_contents)
+    cdm_values = np.array(cdm_values)
+    stability_values = np.array(stability_values)
+    vim_values = np.array(vim_values)
+    
+    sort_idx = np.argsort(bitumen_contents)
+    x_s_b = bitumen_contents[sort_idx]
+    
+    x_dense = np.linspace(np.min(x_s_b), np.max(x_s_b), 5000)
+    
+    p_cdm = np.poly1d(np.polyfit(x_s_b, cdm_values[sort_idx], 2))
+    cdm_dense = p_cdm(x_dense)
+    obc_cdm = x_dense[np.argmax(cdm_dense)]
+    max_cdm = np.max(cdm_dense)
+    
+    p_stab = np.poly1d(np.polyfit(x_s_b, stability_values[sort_idx], 2))
+    stab_dense = p_stab(x_dense)
+    obc_stab = x_dense[np.argmax(stab_dense)]
+    max_stab = np.max(stab_dense)
+    
+    p_vim = np.poly1d(np.polyfit(x_s_b, vim_values[sort_idx], 2))
+    vim_dense = p_vim(x_dense)
+    val_idx = np.argmin(np.abs(vim_dense - 4.0))
+    obc_vim = x_dense[val_idx]
+    
+    final_obc = np.mean([obc_cdm, obc_stab, obc_vim])
+    
+    # Graphs
+    figs = {
+        'cdm': generate_graph(bitumen_contents, cdm_values, 'Binder Content (%)', 'Density (g/cm³)', 'Density vs Binder Content', x_obc=obc_cdm),
+        'stab': generate_graph(bitumen_contents, stability_values, 'Binder Content (%)', 'Stability (kg)', 'Stability vs Binder Content', x_obc=obc_stab),
+        'vim': generate_graph(bitumen_contents, vim_values, 'Binder Content (%)', 'VIM (%)', 'VIM vs Binder Content', x_obc=obc_vim, y_line=4.0),
+        'vfb': generate_graph(bitumen_contents, vfb_values, 'Binder Content (%)', 'VFB (%)', 'VFB vs Binder Content'),
+        'flow': generate_graph(bitumen_contents, flow_values, 'Binder Content (%)', 'Flow (mm)', 'Flow vs Binder Content')
+    }
+    
     return jsonify({
-        'graphs':      graphs,
-        'obc_cdm':     round(obc_cdm, 2),
-        'obc_stab':    round(obc_stab, 2),
-        'obc_vim':     round(obc_vim, 2),
-        'obc':         round(obc, 2),
-        'max_stab':    round(max_stab, 2),
-        'max_cdm':     round(max_cdm, 3),
-        'obc_vim_val': round(obc_vim_val, 2),
-        'obc_vfb_val': round(obc_vfb_val, 2),
-        'obc_flow_val':round(obc_flow_val, 2),
-        'specs':       specs,
-        'computed':    computed,
-        'obs':         obs,
-        'name1':       name1,
-        'name2':       name2,
-        'gsb':         gsb,
-        'gsa':         gsa,
-        'prc':         prc,
-        'report_no':   gen_report_no(),
-        'date':        datetime.now().strftime('%d %B %Y'),
-        'n_samples':   n,
+        'table': results,
+        'obc_cdm': round(obc_cdm, 2),
+        'obc_stab': round(obc_stab, 2),
+        'obc_vim': round(obc_vim, 2),
+        'obc_avg': round(final_obc, 2),
+        'max_cdm': round(max_cdm, 3),
+        'max_stab': round(max_stab, 2),
+        'graphs': figs
     })
 
-
-# ── Auto open browser ──────────────────────────────────
 def open_browser():
-    webbrowser.open('http://localhost:5000')
+    webbrowser.open_new('http://localhost:5000/')
 
 if __name__ == '__main__':
-    threading.Timer(1.2, open_browser).start()
-    print("\n" + "="*50)
-    print("  MARSHALL PRO v1.0")
-    print("  SS & SR Engineering Tools")
-    print("  Sanket Shrivastav & Sachin Ramesh")
-    print("="*50)
-    print("  Opening browser at http://localhost:5000")
-    print("  Press Ctrl+C to stop the server")
-    print("="*50 + "\n")
-    app.run(debug=False, port=5000)
+    threading.Timer(1.25, open_browser).start()
+    app.run(debug=True, use_reloader=False)

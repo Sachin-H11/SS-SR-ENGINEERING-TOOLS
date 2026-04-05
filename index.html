@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marshall Stability Test</title>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Inter:wght@300;400;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css?v=7">
+</head>
+
+<body>
+    <!-- Startup Splash Screen -->
+    <div id="splash-screen" class="splash-overlay no-print">
+        <div class="splash-content">
+            <div class="centered-row logo-row">
+                <div class="left-col anim-left">SS</div>
+                <div class="mid-col anim-top gold">◆</div>
+                <div class="right-col anim-right">SR</div>
+            </div>
+            <div class="splash-title">ENGINEERING TOOLS</div>
+            <div class="centered-row splash-authors-row">
+                <div class="left-col">Sanket Shrivastav</div>
+                <div class="mid-col gold">&amp;</div>
+                <div class="right-col">Sachin Ramesh</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Persistent Header in Screen -->
+    <header class="no-print main-header" style="position: relative;">
+        <div class="header-content">
+            <div class="centered-row header-logo-row">
+                <div class="left-col">SS</div>
+                <div class="mid-col gold">◆</div>
+                <div class="right-col">SR</div>
+            </div>
+            <h1>Marshall Stability Test</h1>
+            <h2 class="header-subtitle">ENGINEERING TOOLS</h2>
+
+            <div class="header-authors-absolute">
+                <span class="cursive-name">Sanket Shrivastav</span>
+                <span class="gold">&amp;</span>
+                <span class="cursive-name">Sachin Ramesh</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="container no-print" id="input-screen">
+        <div class="card form-card">
+            <h2>Preparation Details</h2>
+            <div class="input-grid">
+                <div class="form-group">
+                    <label>Name (Required)</label>
+                    <input type="text" id="name1" placeholder="e.g. Anand Mohan">
+                </div>
+                <div class="form-group">
+                    <label>Sp. Gravity of Bitumen</label>
+                    <input type="number" step="0.01" id="gs_bitumen" value="1.01">
+                </div>
+                <div class="form-group">
+                    <label>Sp. Gravity of Aggregates</label>
+                    <input type="number" step="0.01" id="gs_aggregates" value="2.65">
+                </div>
+                <div class="form-group">
+                    <label>Proving Ring Constant (kg/div)</label>
+                    <input type="number" step="0.01" id="ring_constant" value="5.0">
+                </div>
+            </div>
+
+            <div class="table-header-container">
+                <h2>Sample Observations</h2>
+                <button type="button" class="btn btn-secondary" id="add-row-btn">+ Add Sample</button>
+            </div>
+            <div class="table-responsive">
+                <table id="input-table">
+                    <thead>
+                        <tr>
+                            <th>% Bitumen</th>
+                            <th>Wt in Air (g)</th>
+                            <th>Wt in Water (g)</th>
+                            <th>Proving Ring Divs</th>
+                            <th>Flow (0.25mm)</th>
+                            <th>Thickness (mm)</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="number" step="0.1" value="4.0"></td>
+                            <td><input type="number" step="0.1" value="1221.7"></td>
+                            <td><input type="number" step="0.1" value="700.1"></td>
+                            <td><input type="number" step="0.1" value="238"></td>
+                            <td><input type="number" step="0.1" value="11"></td>
+                            <td><input type="number" step="0.1" value="63.5"></td>
+                            <td><button type="button" class="btn-del" disabled>X</button></td>
+                        </tr>
+                        <tr>
+                            <td><input type="number" step="0.1" value="4.5"></td>
+                            <td><input type="number" step="0.1" value="1225.4"></td>
+                            <td><input type="number" step="0.1" value="705.8"></td>
+                            <td><input type="number" step="0.1" value="264"></td>
+                            <td><input type="number" step="0.1" value="13"></td>
+                            <td><input type="number" step="0.1" value="63.5"></td>
+                            <td><button type="button" class="btn-del" disabled>X</button></td>
+                        </tr>
+                        <tr>
+                            <td><input type="number" step="0.1" value="5.0"></td>
+                            <td><input type="number" step="0.1" value="1231.5"></td>
+                            <td><input type="number" step="0.1" value="713.4"></td>
+                            <td><input type="number" step="0.1" value="292"></td>
+                            <td><input type="number" step="0.1" value="14"></td>
+                            <td><input type="number" step="0.1" value="64.0"></td>
+                            <td><button type="button" class="btn-del" disabled>X</button></td>
+                        </tr>
+                        <tr>
+                            <td><input type="number" step="0.1" value="5.5"></td>
+                            <td><input type="number" step="0.1" value="1235.2"></td>
+                            <td><input type="number" step="0.1" value="716.2"></td>
+                            <td><input type="number" step="0.1" value="305"></td>
+                            <td><input type="number" step="0.1" value="16"></td>
+                            <td><input type="number" step="0.1" value="64.5"></td>
+                            <td><button type="button" class="btn-del" disabled>X</button></td>
+                        </tr>
+                        <tr>
+                            <td><input type="number" step="0.1" value="6.0"></td>
+                            <td><input type="number" step="0.1" value="1240.1"></td>
+                            <td><input type="number" step="0.1" value="714.6"></td>
+                            <td><input type="number" step="0.1" value="284"></td>
+                            <td><input type="number" step="0.1" value="18"></td>
+                            <td><input type="number" step="0.1" value="65.0"></td>
+                            <td><button type="button" class="btn-del" disabled>X</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="error-msg" class="error-banner hidden"></div>
+
+            <div class="actions">
+                <button type="button" class="btn btn-primary btn-large" id="generate-btn">GENERATE REPORT</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Screen -->
+    <div class="container no-print hidden" id="results-screen">
+        <h2 class="section-title">Analysis Results</h2>
+        <div class="graphs-container">
+            <div class="graph-card hidden" id="graph-cdm"><img src="" alt="CDM Graph"></div>
+            <div class="graph-card hidden" id="graph-stab"><img src="" alt="Stability Graph"></div>
+            <div class="graph-card hidden" id="graph-vim"><img src="" alt="VIM Graph"></div>
+            <div class="graph-card hidden" id="graph-vfb"><img src="" alt="VFB Graph"></div>
+            <div class="graph-card hidden" id="graph-flow"><img src="" alt="Flow Graph"></div>
+        </div>
+
+        <div class="final-results card hidden" id="final-results-box">
+            <h3>Optimum Binder Content (OBC)</h3>
+            <ul class="obc-breakdown">
+                <li><span>From Max CDM</span> <span id="r-obc-cdm" class="gold-text"></span></li>
+                <li><span>From Max Stability</span> <span id="r-obc-stab" class="gold-text"></span></li>
+                <li><span>From VIM = 4%</span> <span id="r-obc-vim" class="gold-text"></span></li>
+            </ul>
+            <hr>
+            <div class="obc-final">
+                <span>OBC (Average)</span> <span id="r-obc-avg" class="highlight"></span>
+            </div>
+            <div class="other-max">
+                <p>Max Stability: <span id="r-max-stab"></span> kg</p>
+                <p>Max CDM: <span id="r-max-cdm"></span> g/cm³</p>
+            </div>
+            <button class="btn btn-primary" id="print-btn" style="margin-top:20px; width:100%;">PRINT PDF
+                REPORT</button>
+        </div>
+    </div>
+
+    <!-- Print Layout (Hidden on screen) -->
+    <div id="print-layout">
+        <div class="print-top-header">
+            <span class="left-cap">SS & SR ENGINEERING TOOLS — TRANSPORTATION ENGINEERING LAB</span>
+        </div>
+        <div class="print-main-title">
+            <h1>Marshall Mix Design Test Report</h1>
+            <div class="subtitle">Determination of Optimum Bitumen Content — IS:2386 / ASTM D6927</div>
+        </div>
+
+        <div class="print-params-grid">
+            <div class="param-col">
+                <div>Date: <span id="print-date" class="bold-val"></span></div>
+                <div>Sp. Gr. Bitumen: <span id="p-gs-bitumen" class="bold-val"></span></div>
+            </div>
+            <div class="param-col">
+                <div>Total Samples: <span id="p-total-samples" class="bold-val"></span></div>
+                <div>Sp. Gr. Aggregates: <span id="p-gs-aggregates" class="bold-val"></span></div>
+            </div>
+            <div class="param-col">
+                <div>Blows per face: <span class="bold-val">75</span></div>
+                <div>Proving Ring Const.: <span id="p-ring-const" class="bold-val"></span> kg/div</div>
+            </div>
+        </div>
+
+        <div class="print-signatures">
+            <div class="sig-block">
+                <div class="sig-line"></div>
+                <div class="sig-title">Tested By</div>
+                <div class="sig-name" id="print-tested-by"></div>
+            </div>
+            <div class="sig-block">
+                <div class="sig-line"></div>
+                <div class="sig-title">Verified By</div>
+                <div class="sig-name">ANDY</div>
+            </div>
+        </div>
+
+        <div class="print-section">
+            <div class="section-badge">1. OBSERVATIONS</div>
+            <table class="print-table" id="print-obs-table">
+                <thead>
+                    <tr>
+                        <th>Sr.</th>
+                        <th>% Bitumen</th>
+                        <th>Wt. in Air (g)</th>
+                        <th>Wt. in Water (g)</th>
+                        <th>Proving Ring Div.</th>
+                        <th>Flow (0.25mm units)</th>
+                        <th>Thickness (mm)</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="print-section">
+            <div class="section-badge">2. COMPUTED VALUES</div>
+            <table class="print-table" id="print-comp-table">
+                <thead>
+                    <tr>
+                        <th>Sr.</th>
+                        <th>% Bitumen</th>
+                        <th>CDM (g/cm³)</th>
+                        <th>Vb (%)</th>
+                        <th>Va (%)</th>
+                        <th>VMA (%)</th>
+                        <th>VIM (%)</th>
+                        <th>VFB (%)</th>
+                        <th>Stability (kg)</th>
+                        <th>Flow (mm)</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+        <div class="page-break"></div>
+
+        <!-- Page 2 Header -->
+        <div class="page-2-header">
+            <div>Marshall Mix Design Test</div>
+            <div id="p2-date"></div>
+        </div>
+
+        <div class="print-section">
+            <div class="section-badge">3. MARSHALL GRAPHICAL PLOTS</div>
+            <div class="graphs-grid">
+                <div class="grid-card">
+                    <div class="grid-title">DENSITY VS BINDER CONTENT</div><img id="p-graph-cdm" src="">
+                </div>
+                <div class="grid-card">
+                    <div class="grid-title">STABILITY VS BINDER CONTENT</div><img id="p-graph-stab" src="">
+                </div>
+                <div class="grid-card">
+                    <div class="grid-title">VOIDS IN MIX (VIM) VS BINDER CONTENT</div><img id="p-graph-vim" src="">
+                </div>
+                <div class="grid-card">
+                    <div class="grid-title">VFB VS BINDER CONTENT</div><img id="p-graph-vfb" src="">
+                </div>
+                <div class="grid-card">
+                    <div class="grid-title">FLOW VS BINDER CONTENT</div><img id="p-graph-flow" src="">
+                </div>
+            </div>
+        </div>
+
+        <div class="print-section">
+            <div class="section-badge">4. SPECIFICATION CHECK (MORTH)</div>
+            <table class="print-table spec-table">
+                <thead>
+                    <tr>
+                        <th style="text-align:left;">Property</th>
+                        <th>Specified Range</th>
+                        <th>Value at OBC</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="print-spec-table"></tbody>
+            </table>
+        </div>
+
+        <div class="print-section">
+            <div class="section-badge">5. FINAL RESULTS</div>
+            <div class="print-result-cards" style="margin-bottom:15px;">
+                <div class="pr-card">
+                    <div class="pr-card-title">OPTIMUM BITUMEN CONTENT</div>
+                    <div class="pr-card-val"><span id="p-obc-avg"></span><br><small>%</small></div>
+                </div>
+                <div class="pr-card">
+                    <div class="pr-card-title">MAX MARSHALL STABILITY</div>
+                    <div class="pr-card-val"><span id="p-max-stab" class="no-unit"></span><br><small>kg</small></div>
+                </div>
+                <div class="pr-card">
+                    <div class="pr-card-title">MAX CDM</div>
+                    <div class="pr-card-val"><span id="p-max-cdm" class="no-unit"></span><br><small>g/cm³</small></div>
+                </div>
+            </div>
+
+            <div style="padding:15px; background:#f9fbff; border:1px solid #b3d4ff; border-radius:4px;">
+                <div class="section-badge" style="border:none; margin-bottom:5px;">OBC DETERMINATION</div>
+                <table class="obc-table">
+                    <tr>
+                        <td style="color:#2b5797;">Criterion</td>
+                        <td style="text-align:right"><b>Binder %</b></td>
+                    </tr>
+                    <tr>
+                        <td>Max CDM</td>
+                        <td style="text-align:right" id="p-td-cdm"></td>
+                    </tr>
+                    <tr>
+                        <td>Max Stability</td>
+                        <td style="text-align:right" id="p-td-stab"></td>
+                    </tr>
+                    <tr>
+                        <td>VIM = 4%</td>
+                        <td style="text-align:right" id="p-td-vim"></td>
+                    </tr>
+                    <tr class="obc-mean-row">
+                        <td style="color:#107c41;"><b>OBC (Mean)</b></td>
+                        <td style="text-align:right; color:#107c41;" id="p-td-avg"></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="pr-sub-results" style="margin-top:15px;">
+                From Max CDM: <span class="bold-val" id="p-obc-cdm"></span> &nbsp;&nbsp;&nbsp; From Max Stability: <span
+                    class="bold-val" id="p-obc-stab"></span> &nbsp;&nbsp;&nbsp; From VIM = 4%: <span class="bold-val"
+                    id="p-obc-vim"></span> &nbsp;&nbsp;&nbsp; <strong class="blue-bold">Average OBC = <span
+                        id="p-obc-avg-2"></span></strong>
+            </div>
+        </div>
+
+        <div class="print-section" style="margin-top:30px;">
+            <div class="section-badge">6. EVALUATION</div>
+            <table class="print-table eval-table">
+                <thead>
+                    <tr>
+                        <th style="text-align:left;">Rubric</th>
+                        <th>Conduction & Report Writing</th>
+                        <th>Timely Submission</th>
+                        <th>Interaction Q&A</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="text-align:left; font-weight:bold;">Marks Allotted</td>
+                        <td><b>15</b></td>
+                        <td><b>5</b></td>
+                        <td><b>5</b></td>
+                        <td><b>25</b></td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:left; font-weight:bold;">Marks Obtained</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="signatures">
+                <div class="sig-line">Date of Performance:
+                    <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                </div>
+                <div class="sig-line">Date of Submission:
+                    <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                </div>
+                <div class="sig-line">Faculty In-charge:
+                    <span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+                </div>
+            </div>
+
+            <div class="p2-footer">
+                <div>SS & SR Engineering Tools — Transportation Engineering Lab</div>
+                <div id="p2-footer-date"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="no-print">
+        &copy; 2026 SS & SR Engineering Tools &middot; All Rights Reserved
+    </footer>
+
+    <div class="print-footer">
+        &copy; 2026 SS & SR Engineering Tools &middot; All Rights Reserved
+    </div>
+
+    <script src="/static/main.js"></script>
+</body>
+
+</html>
